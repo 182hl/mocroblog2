@@ -1,14 +1,21 @@
 from flask import Flask
+from flask_migrate import Migrate
+
 from config import Config
+from flask_sqlalchemy import SQLAlchemy
 #
 app = Flask(__name__)
 #读取配置文件
 app.config.from_object(Config)
 print(app.config['SECRET_KEY'])
 
+
+db = SQLAlchemy(app) #数据库迁移对象
+migrate = Migrate(app,db)  #迁移引擎对象
 print("等会调用我", __name__)
 
 
 
-from app import routs #从app包中导入模块routs
+from app import routs,model #从app包中导入模块routs,model
+
 
