@@ -9,11 +9,15 @@
         <title>Welcome to weibo!</title>
     {% endif %}
 </head>
-    <body>
+<body>
         <div>
             Microblog:
                 <a href="{{ url_for('index') }}">Home</a>
+                 {% if current_user.is_anonymous %}
                 <a href="{{ url_for('login') }}">Login</a>
+                {% else %}
+                 <a href = "{{ url_for('logout') }}">Logout</a>
+                {% endif %}
         <div/>
 {#            #设置flash格式#}
                 <hr>
@@ -28,5 +32,5 @@
                     {% endwith %}
             {% block content %}
             {% endblock %}
-    </body>
+</body>
 </html>
