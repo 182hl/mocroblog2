@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import remember as remember
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_wtf import form
@@ -11,6 +13,11 @@ from app.forms import LoginForm, RegistrationForm
 from flask_login import current_user,login_user
 from app.model import User
 
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.last_seen = datetime.utcnow()
+        db.session.commit()
 
 @app.route('/',endpoint='index')
 @app.route('/index')
@@ -49,11 +56,11 @@ def login():
         login_user(user,login_form.remember_me.data)
 
         #点击登陆之后自动跳转到指定的下一页
-        next_page = request.args.get('next')
-        print(url_parse(next_page).netloc)
-        if not next_page or url_parse(next_page).netloc!='':
-            next_page = url_for('index')
-        return redirect(next_page)
+        # next_page = request.args.get('next')
+        # print(url_parse(next_page).netloc)
+        # if not next_page or url_parse(next_page).netloc!='':
+        #     next_page = url_for('index')
+        # return redirect(next_page)
 
     #     flash(msg)
         return redirect(url_for('index'))
@@ -79,6 +86,20 @@ def register():
         flash('Configulations, you sre now a regesterred user!')
         return redirect(url_for('login'))
     return render_template('register.html',title='Register',form=form)
+
+
+#用户个人资料的视图函数
+@app.route('/user/<username>')
+#需要登陆才有权限访问的页面
+@login_required
+def user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    posts = [
+        {'author':user, 'body': 'Test post #1'},
+        {'author':user, 'body': 'Test post #2'}
+    ]
+    return render_template('user.html', user = user, posts = posts)
+
 
 
 
