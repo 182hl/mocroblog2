@@ -9,9 +9,10 @@ from app import app, db
 from flask import render_template, flash, redirect, url_for, request
 
 #2个路由
-from app.forms import LoginForm, RegistrationForm, EditProfileForm
+from app.forms import LoginForm, RegistrationForm, EditProfileForm, ResetPasswordRequestForm, ReserPasswordForm
 from flask_login import current_user,login_user
 from app.model import User
+from app.email import send_password_reset_email
 
 @app.before_request
 def before_request():
@@ -119,6 +120,73 @@ def edit_profile():
     return render_template('edit_profile.html',title='Edit Profile',form=form)
 
 
+#关注功能
+@app.route('/follow/<username>')
+@login_required
+def follow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('User {} not found.'.format(username))
+        return redirect(url_for('index'))
+    if user == current_user:
+        flash('You cannot folllow yourself!')
+        return redirect(url_for('user',username=username))
+    current_user.follow(user)
+    db.session.commit()
+    flash('You are following {}!'.format(username))
+    return redirect(url_for('user',username=username))
+
+
+#取消关注功能
+@app.route('/unfollow/<username>')
+@login_required
+def unfollow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('User {} not found.'.format(username))
+        return redirect(url_for('index'))
+    if user == current_user:
+        flash('You cannot unfollow yourself!')
+        return redirect(url_for('user',username=username))
+    current_user.unfollow(user)
+    db.session.commit()
+    flash('You are not following {}.'.format(username))
+    return redirect(url_for('user',username=username))
+
+
+#重置密码功能
+@app.route('/reset_password_request',methods=['GET','POST'])
+def reset_password_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = ResetPasswordRequestForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_password_reset_email(user)
+        flash('Check your email for the instructions to reset your password')
+        return redirect(url_for('login'))
+
+
+    return render_template('email/reset_password_request.html',title='Reset Password',form=form)
+
+@app.route('/reset_password/<token>',methods=['GET','POST'])
+def reset_password(token):
+    #查看当前用户是否已登录，如果是已登录状态，则返回主页
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    #根据token校验用户的id是否在数据库里存在
+    user = User.verify_reset_password_token(token)
+    if not user:
+        return redirect(url_for('index'))
+    form = ReserPasswordForm()
+    #如果提交了新密码，则更新新密码
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+        flash('Your password has been reset.')
+        return redirect(url_for('login'))
+    return render_template('reset_password.html',form=form)
 
 
 
