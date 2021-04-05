@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import remember as remember
+import timestamp as timestamp
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_wtf import form
 from werkzeug.urls import url_parse
@@ -9,9 +10,10 @@ from app import app, db
 from flask import render_template, flash, redirect, url_for, request
 
 #2个路由
-from app.forms import LoginForm, RegistrationForm, EditProfileForm, ResetPasswordRequestForm, ReserPasswordForm
+from app.forms import LoginForm, RegistrationForm, EditProfileForm, ResetPasswordRequestForm, ReserPasswordForm, \
+    PostForm
 from flask_login import current_user,login_user
-from app.model import User
+from app.model import User, Post
 from app.email import send_password_reset_email
 
 @app.before_request
@@ -20,26 +22,41 @@ def before_request():
         current_user.last_seen = datetime.utcnow()
         db.session.commit()
 
-@app.route('/',endpoint='index')
-@app.route('/index')
+@app.route('/',endpoint='index',methods = ['GET','POST'])
+@app.route('/index',methods = ['GET','POST'])
 #必须登陆才能访问的页面，做登录校验
-# @login_required
+@login_required
 #1个视图函数
 def index():
     # user = {"username": "Migeal"}
     # # return "hello,World" #返回一个字符串
-    #
-    posts = [
-        {
-            'author': {'username': 'John'},
-            'body': 'Beautiful day in Portland!'
-        },
-        {
-            'author': {'username': 'Susan'},
-            'body': 'The Avengers movie was so cool!'
-        }
-    ]
-    return render_template('index.html',title = 'Home',posts=posts)
+    #提交博客方法
+    form =PostForm()
+    if form.validate_on_submit():
+        post = Post(body=form.post.data,author=current_user)
+        db.session.add(post)
+        db.session.commit()
+        flash('Your post is now live!')
+        #重定向的好处是刷新页面的时候不会把之前的表单内容再请求一次
+        return redirect(url_for('index'))
+
+    # if current_user.is_authenticated:
+    # 加载用户提交过的博客内容
+    page = request.args.get('page', 1, type=int)
+    posts = current_user.followed_posts().paginate(page, app.config['POSTS_PER_PAGE'], False)
+    next_url = url_for('index', page=posts.next_num) if posts.has_next else None
+    prev_url = url_for('index', page=posts.prev_num) if posts.has_prev else None
+    return render_template('index.html',title = 'Home',posts = posts.items,form=form,next_url=next_url,prev_url=prev_url)
+    # posts = [
+    #     {
+    #         'author': {'username': 'John'},
+    #         'body': 'Beautiful day in Portland!'
+    #     },
+    #     {
+    #         'author': {'username': 'Susan'},
+    #         'body': 'The Avengers movie was so cool!'
+    #     }]
+    return render_template('index.html',title = 'Home',posts = posts)
 
 #使用URL的内部映射到视图函数来生成URL，以免每次修改需要全局搜索修改来重组链接
 #定义登陆路由
@@ -79,6 +96,7 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     form = RegistrationForm()
+
     if form.validate_on_submit():
         user = User(username=form.username.data,email=form.email.data)
         user.set_password(form.password.data)
@@ -95,11 +113,15 @@ def register():
 @login_required
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    posts = [
-        {'author':user, 'body': 'Test post #1'},
-        {'author':user, 'body': 'Test post #2'}
-    ]
-    return render_template('user.html', user = user, posts = posts)
+    # posts = [
+    #     {'author':user, 'body': 'Test post #1'},
+    #     {'author':user, 'body': 'Test post #2'}
+    # ]
+    page = request.args.get('page', 1, type=int)
+    posts = user.posts.order_by(Post.timestamp.desc()).paginate(page, app.config['POSTS_PER_PAGE'], False)
+    next_url = url_for('user', username=user.username,page=posts.next_num) if posts.has_next else None
+    prev_url = url_for('user',username=user.username, page=posts.prev_num) if posts.has_prev else None
+    return render_template('user.html', user = user, posts = posts.items,next_url=next_url,prev_url=prev_url)
 
 
 #编辑用户信息
@@ -187,6 +209,18 @@ def reset_password(token):
         flash('Your password has been reset.')
         return redirect(url_for('login'))
     return render_template('reset_password.html',form=form)
+
+#浏览所有用户的帖子
+@app.route('/explore')
+@login_required
+def explore():
+    page = request.args.get('page',1,type=int)
+    posts = Post.query.order_by(Post.timestamp.desc()).paginate(page,app.config['POSTS_PER_PAGE'],False)
+    next_url = url_for('index', page=posts.next_num) if posts.has_next else None
+    prev_url = url_for('index', page=posts.prev_num) if posts.has_prev else None
+    # posts = Post.query.order_by(Post.timestamp.desc()).all()
+    return render_template('index.html',title='Explore',posts=posts.items,next_url=next_url,prev_url=prev_url)
+
 
 
 

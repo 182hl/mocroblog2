@@ -58,6 +58,13 @@ class User(UserMixin,db.Model):
     def avatar(self, size):
         digest = md5(self.email.lower().encode('utf-8')).hexdigest()
         return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(digest, size)
+
+    #结合自己和关注者的帖子
+    def followed_posts(self):
+        followed = Post.query.join(followers,(followers.c.followed_id==Post.user_id)).filter(followers.c.follower_id==self.id)
+        own = Post.query.filter_by(user_id = self.id)
+        return followed.union(own).order_by(Post.timestamp.desc())
+
     #添加和删除用户
     def follow(self,user):
         if not self.is_following(user):
@@ -71,18 +78,14 @@ class User(UserMixin,db.Model):
         return self.followed.filter(followers.c.followed_id==user.id).count()>0
 
     #获取已关注用户的所有帖子,采用sqlalchemy查询方法
-    def followed_posts(self):
-        #帖子表里的被关注的人发的所有的帖子里面过滤出关注者是本身的帖子
-        return Post.query.join(
-            followers,(followers.c.followed_id==Post.user_id)).filter(
-            followers.c.follower_id==self.id).order_by(
-                Post.timestamp.desc())
+    # def followed_posts1(self):
+    #     #帖子表里的被关注的人发的所有的帖子里面过滤出关注者是本身的帖子
+    #     return Post.query.join(
+    #         followers,(followers.c.followed_id==Post.user_id)).filter(
+    #         followers.c.follower_id==self.id).order_by(
+    #             Post.timestamp.desc())
 
-    #结合自己和关注者的帖子
-    def followed_posts(self):
-        followed = Post.query.join(followers,(followers.c.followed_id==Post.user_id)).filter(followers.c.follower_id==self.id)
-        own = Post.query.filter_by(user_id = self.id)
-        return followed.union(own).order_by(Post.timestamp.desc())
+
 
     #以字符串形式生成一个JWT令牌
     def get_reset_password_token(self, expires_in=600):
