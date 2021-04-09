@@ -1,28 +1,50 @@
 {% extends "base.html" %}
-{% block content %}
-    <h1>Sign In</h1>
-    <form action ="" method = "post" novalidate>
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{#{% block app_content %}#}
+{#    <h1>Sign In</h1>#}
+{#    <form action ="" method = "post" novalidate>#}
 {#    防止CSRF攻击#}
-        {{ form.hidden_tag() }}
-    <p>
-        {{ form.username.label }}<br>
-        {{ form.username(size=32) }}
+{#        {{ form.hidden_tag() }}#}
+{#    <p>#}
+{#        {{ form.username.label }}<br>#}
+{#        {{ form.username(size=32) }}#}
 {#    提示字段验证错误信息#}
-        {% for error in form.username.errors %}
-        <span style="color:red;">[{{ error }}]</span>
-        {% endfor %}
-    </p>
-    <p>
-        {{ form.password.label }}<br>
-        {{ form.password(size=32) }}
+{#        {% for error in form.username.errors %}#}
+{#        <span style="color:red;">[{{ error }}]</span>#}
+{#        {% endfor %}#}
+{#    </p>#}
+{#    <p>#}
+{#        {{ form.password.label }}<br>#}
+{#        {{ form.password(size=32) }}#}
         {#    提示字段验证错误信息#}
-        {% for error in form.username.errors %}
-        <span style="color:red;">[{{ error }}]</span>
-        {% endfor %}
-    </p>
-        <p>{{ form.remember_me() }}</p>
-        <p>{{ form.submit() }}</p>
+{#        {% for error in form.username.errors %}#}
+{#        <span style="color:red;">[{{ error }}]</span>#}
+{#        {% endfor %}#}
+{#    </p>#}
+{#        <p>{{ form.remember_me() }}</p>#}
+{#        <p>{{ form.submit() }}</p>#}
     {#    注册按钮#}
+{#        <p> New User? <a href="{{ url_for('register') }}"> Click to Register</a></p>#}
+{#        <p>#}
+{#            Forget Your Password?#}
+{#            <a href="{{ url_for('reset_password_request') }}">Click to Reset It</a>#}
+{#        </p>#}
+{#    </form>#}
+{##}
+{#{% endblock %}#}
+
+
+
+{% block app_content %}
+    <h1>Sign In</h1>
+    <div class="row">
+        <div class="col-md-4">
+            {{ wtf.quick_form(form) }}
+        </div>
+    </div>
+    <br>
+
         <p> New User? <a href="{{ url_for('register') }}"> Click to Register</a></p>
         <p>
             Forget Your Password?
@@ -31,3 +53,4 @@
     </form>
 
 {% endblock %}
+

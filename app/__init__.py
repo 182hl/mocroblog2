@@ -6,6 +6,8 @@ from flask_migrate import Migrate
 from config import Config
 from flask_sqlalchemy import SQLAlchemy
 
+from flask_bootstrap import Bootstrap
+
 from flask_mail import Mail
 #
 app = Flask(__name__)
@@ -17,6 +19,7 @@ print(app.config['SECRET_KEY'])
 db = SQLAlchemy(app) #数据库迁移对象
 
 mail = Mail(app)
+bootstrap = Bootstrap(app)
 migrate = Migrate(app,db)  #迁移引擎对象
 
 
