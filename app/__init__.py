@@ -2,6 +2,7 @@ import login as login
 from flask import Flask
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from flask_moment import Moment
 
 from config import Config
 from flask_sqlalchemy import SQLAlchemy
@@ -21,6 +22,7 @@ db = SQLAlchemy(app) #数据库迁移对象
 mail = Mail(app)
 bootstrap = Bootstrap(app)
 migrate = Migrate(app,db)  #迁移引擎对象
+moment = Moment(app)
 
 
 login = LoginManager(app)
