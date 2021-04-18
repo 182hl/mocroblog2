@@ -4,13 +4,15 @@ from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Le
 
 #登陆类
 from app.model import User
+from flask_babel import Babel,lazy_gettext as _l
+
 
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
-    password = PasswordField('Password', validators=[DataRequired()])
-    remember_me = BooleanField('Remember_me')
-    submit = SubmitField('Sign_in')
+    username = StringField(_l('Username'), validators=[DataRequired()])
+    password = PasswordField(_l('Password'), validators=[DataRequired()])
+    remember_me = BooleanField(_l('Remember_me'))
+    submit = SubmitField(_l('Sign_in'))
 
 #注册类
 class RegistrationForm(FlaskForm):

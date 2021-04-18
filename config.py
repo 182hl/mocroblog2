@@ -28,3 +28,6 @@ class Config:
 
     # 设置分页常量
     POSTS_PER_PAGE = 3
+
+    #应用程序使用双语言
+    LANGUAGES = ['en','zh']

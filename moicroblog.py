@@ -1,5 +1,6 @@
 from app import app,db
 from app.model import User,Post
+from app import cli
 
 #shell上下文处理，无需每次在shell中做一些重复的导入
 @app.shell_context_processor

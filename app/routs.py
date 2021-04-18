@@ -5,6 +5,7 @@ import timestamp as timestamp
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_wtf import form
 from werkzeug.urls import url_parse
+from flask_babel import _
 
 from app import app, db
 from flask import render_template, flash, redirect, url_for, request
@@ -15,6 +16,8 @@ from app.forms import LoginForm, RegistrationForm, EditProfileForm, ResetPasswor
 from flask_login import current_user,login_user
 from app.model import User, Post
 from app.email import send_password_reset_email
+from flask_babel import Babel,lazy_gettext as _l
+
 
 @app.before_request
 def before_request():
@@ -36,7 +39,8 @@ def index():
         post = Post(body=form.post.data,author=current_user)
         db.session.add(post)
         db.session.commit()
-        flash('Your post is now live!')
+        #_()函数将文本包装在基本语言中
+        flash(_('Your post is now live!'))
         #重定向的好处是刷新页面的时候不会把之前的表单内容再请求一次
         return redirect(url_for('index'))
 
@@ -69,7 +73,7 @@ def login():
     if login_form.validate_on_submit():
         user = User.query.filter_by(username=login_form.username.data).first()
         if user is None or not user.check_password(login_form.password.data):
-            flash('invalid usename or password')
+            flash(_('invalid usename or password'))
         #添加用户信息到session
         login_user(user,login_form.remember_me.data)
 
@@ -134,7 +138,7 @@ def edit_profile():
         current_user.about_me = form.about_me.data
         db.session.commit()
 
-        flash('Your changes have been saved.')
+        flash(_('Your changes have been saved.'))
         return redirect(url_for('edit_profile'))
     elif request.method == 'GET':
         form.username.data = current_user.username
@@ -155,7 +159,7 @@ def follow(username):
         return redirect(url_for('user',username=username))
     current_user.follow(user)
     db.session.commit()
-    flash('You are following {}!'.format(username))
+    flash(_('You are following %{username}!',username=username))
     return redirect(url_for('user',username=username))
 
 
