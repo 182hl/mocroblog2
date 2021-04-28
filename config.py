@@ -31,3 +31,7 @@ class Config:
 
     #应用程序使用双语言
     LANGUAGES = ['en','zh']
+
+    #翻译设置
+    APPID = os.environ.get('APPID')
+    BD_TRANSLATOR_KEY = os.environ.get('BD_TRANSLATOR_KEY')

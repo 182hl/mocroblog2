@@ -4,11 +4,12 @@ import remember as remember
 import timestamp as timestamp
 from flask_login import current_user, login_user, logout_user, login_required
 from flask_wtf import form
+from guess_language import guess_language
 from werkzeug.urls import url_parse
 from flask_babel import _
 
 from app import app, db
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for, request, jsonify
 
 #2个路由
 from app.forms import LoginForm, RegistrationForm, EditProfileForm, ResetPasswordRequestForm, ReserPasswordForm, \
@@ -17,6 +18,8 @@ from flask_login import current_user,login_user
 from app.model import User, Post
 from app.email import send_password_reset_email
 from flask_babel import Babel,lazy_gettext as _l
+
+from app.translate import translate
 
 
 @app.before_request
@@ -36,7 +39,10 @@ def index():
     #提交博客方法
     form =PostForm()
     if form.validate_on_submit():
-        post = Post(body=form.post.data,author=current_user)
+        language = guess_language(form.post.data)
+        if language == 'UNKNOWN' or len(language) > 5:
+            language = ' '
+        post = Post(body=form.post.data,author=current_user,language=language)
         db.session.add(post)
         db.session.commit()
         #_()函数将文本包装在基本语言中
@@ -226,5 +232,8 @@ def explore():
     return render_template('index.html',title='Explore',posts=posts.items,next_url=next_url,prev_url=prev_url)
 
 
-
+@app.route('/translate',methods=['POST'])
+@login_required
+def translate_text():
+    return jsonify({'text':translate(request.form['text'],request.form['source_language'],request.form['dest_language'])})
 
