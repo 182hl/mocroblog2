@@ -3,9 +3,10 @@ from time import time
 
 import algorithm as algorithm
 import jwt
+from flask import current_app
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from app import db, app
+from app import db
 #混用类
 from flask_login import UserMixin
 from app import login
@@ -89,13 +90,13 @@ class User(UserMixin,db.Model):
 
     #以字符串形式生成一个JWT令牌
     def get_reset_password_token(self, expires_in=600):
-        return jwt.encode({'reset_password': self.id, 'exp': time() + expires_in}, app.config['SECRET_KEY'],
+        return jwt.encode({'reset_password': self.id, 'exp': time() + expires_in}, current_app.config['SECRET_KEY'],
                           algorithm='HS256').encode('utf-8')
 
     @staticmethod
     def verify_reset_password_token(token):
         try:
-            id = jwt.decode(token,app.config['SECRET_KEY'],
+            id = jwt.decode(token,current_app.config['SECRET_KEY'],
                             algorithms=['HS256'])['reset_password']
         except:
             return

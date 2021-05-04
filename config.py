@@ -14,8 +14,9 @@ load_dotenv(os.path.join(basedir,'microblog.env'))
 class Config:
     # SECRET_KEY 这个配置变量，会被FLASK及其扩展使用其值作为加密密钥，用于生产签名或令牌，Flask-wtf使用它来保护Web表单免受CSFR攻击
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you will never guess'
-#应用使用的数据库URL必须保存到Flask配置对象的SQLALCHEMY_DATABASE_URI键中
+    #应用使用的数据库URL必须保存到Flask配置对象的SQLALCHEMY_DATABASE_URI键中
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI') or 'sqlite:///' + os.path.join(basedir, 'app.sqlite')
+    # SQLALCHEMY_DATABASE_URI = 'mysql://root:root@127.0.0.1/microblog'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     POSTS_PER_PAGE = 3
